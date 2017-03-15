@@ -6,9 +6,13 @@ const express     = require('express'),
       https       = require('https'),
       request     = require('request'),
       parseString = require('xml2js').parseString,
+      bodyParser  = require('body-parser'),
       app         = express();
 
 const port = process.env.PORT || 3060;
+
+app.use(bodyParser.raw({type: 'text/xml'}));
+//app.use(xmlParser(parserOptions));
 
 app.get('/', (req, res) => {
     res.send(`<!DOCTYPE html>
@@ -63,58 +67,92 @@ app.get('/', (req, res) => {
 `);
 });
 
-app.post('/:noDownload', upload.single('file'), (req, res) => {
-    console.log(`Converting ${req.file.originalname} to the JSON.`);
-    
-    parseString(req.file.buffer, (err, result) => {
+/**
+ *
+ * @param {{Name: string, Type: string, Profile: Object}} json
+ * @param name
+ * @param type
+ * @returns {Promise}
+ */
+function normalizeJson(json, name, type) {
+    return new Promise(resolve => {
+        let data = Object.assign({}, {Name: name, Type: type}, json);
+        
         let hotspots = ['Hotspot', 'VendorHotspot', 'GhostHotspot'];
         for (let hotspot of hotspots) {
-            if (result.Profile && result.Profile[hotspot + 's'] && result.Profile[hotspot+'s'][0]) {
-                result.Profile[hotspot + 's'] = result.Profile[hotspot + 's'][0][hotspot].map(h => {
+            if (data.Profile && data.Profile[hotspot + 's'] && data.Profile[hotspot + 's'][0]) {
+                data.Profile[hotspot + 's'] = data.Profile[hotspot + 's'][0][hotspot].map(h => {
                     return {
-                        X: parseFloat(h.X[0]),
-                        Y: parseFloat(h.Y[0]),
-                        Z: parseFloat(h.Z[0]),
+                        X:    parseFloat(h.X[0]),
+                        Y:    parseFloat(h.Y[0]),
+                        Z:    parseFloat(h.Z[0]),
+                        Type: h.type,
                     }
                 })
             }
         }
-        if (result.Profile.Repair) {
-            result.Profile.Repair = result.Profile.Repair.map(r => {
+        
+        if (data.Profile && data.Profile.Repair) {
+            data.Profile.Repair = data.Profile.Repair.map(r => {
                 return {
                     Position: {
                         X: parseFloat(r.Position[0].X[0]),
                         Y: parseFloat(r.Position[0].Y[0]),
                         Z: parseFloat(r.Position[0].Z[0]),
                     },
-                    Name: r.Name[0]
+                    Name:     r.Name[0]
                 }
             })
         }
         
-        let json = Object.assign(
-            {},
-            {
-                Name: req.file.originalname,
-                Type: "grinding",
-            },
-            result
-        );
-        
-        const data = JSON.stringify(json, null, 4);
-        //console.log(data);
-        if (req.param('noDownload') === '1') {
-            res.send(data);
+        resolve(data);
+    });
+}
+
+function parseXml(xml) {
+    return new Promise((resolve, reject) => {
+        parseString(xml, (err, json) => {
+            if (err) {
+                return reject(err);
+            }
             
-            return
-        }
-        
-        res.setHeader('Content-disposition', `attachment; filename= ${req.file.originalname.replace('.xml', '.json')}`);
-        res.setHeader('Content-type', 'application/json');
-        res.write(data, err => {
-            res.end();
-        });
-    })
+            resolve(json);
+        })
+    });
+}
+
+app.post('/xml/:name/:type?', (req, res) => {
+    parseXml("" + req.body)
+        .then(json => {
+            normalizeJson(json, req.params.name, req.params.type || 'grinding')
+                .then(json => {
+                    res.status(200).json(json);
+                })
+                .catch(err => res.status(500).send(err.stack));
+        })
+        .catch(err => res.status(500).send(err.stack));
+});
+
+app.post('/:noDownload', upload.single('file'), (req, res) => {
+    parseXml(req.file.buffer)
+        .then(json => {
+            normalizeJson(json, name, "grinding")
+                .then(data => {
+                    if (req.params.noDownload === '1') {
+                        res.json(data);
+                        
+                        return
+                    }
+                    
+                    res.setHeader('Content-disposition', `attachment; filename= ${req.file.originalname.replace('.xml', '.json')}`);
+                    res.setHeader('Content-type', 'application/json');
+                    res.write(JSON.stringify(data, null, 4), err => {
+                        res.end();
+                    });
+                })
+                .catch(err => res.status(500).send(err.stack));
+        })
+        .catch(err => res.status(500).send(err.stack));
 });
 
 app.listen(port, () => {
