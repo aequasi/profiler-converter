@@ -155,6 +155,10 @@ app.post('/:noDownload?', upload.single('file'), (req, res) => {
         .catch(err => res.status(500).send(err.stack));
 });
 
+app.get('/hat', (req, res) => {
+    request("http://www.theopen-road.com/wp-content/uploads/2014/03/rabbit-hat.jpg").pipe(res);
+});
+
 app.listen(port, () => {
     console.log("Listening on http://localhost:" + port);
 });
