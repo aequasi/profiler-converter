@@ -64,23 +64,17 @@ app.post('/', upload.single('file'), (req, res) => {
     console.log(`Converting ${req.file.originalname} to the JSON.`);
     
     parseString(req.file.buffer, (err, result) => {
-        if (result.Profile && result.Profile.Hotspots && result.Profile.Hotspots[0]) {
-            result.Profile.Hotspots = result.Profile.Hotspots[0].Hotspot.map(h => {
-                return {
-                    X: parseFloat(h.X[0]),
-                    Y: parseFloat(h.Y[0]),
-                    Z: parseFloat(h.Z[0]),
-                }
-            })
-        }
-        if (result.Profile && result.Profile.VendorHotspots && result.Profile.VendorHotspots[0]) {
-            result.Profile.VendorHotspots = result.Profile.VendorHotspots[0].VendorHotspot.map(h => {
-                return {
-                    X: parseFloat(h.X[0]),
-                    Y: parseFloat(h.Y[0]),
-                    Z: parseFloat(h.Z[0]),
-                }
-            })
+        let hotspots = ['Hotspot', 'VendorHotspot', 'GhostHotspot'];
+        for (let hotspot of hotspots) {
+            if (result.Profile && result.Profile[hotspot + 's'] && result.Profile[hotspot+'s'][0]) {
+                result.Profile[hotspot + 's'] = result.Profile[hotspot + 's'][0][hotspot].map(h => {
+                    return {
+                        X: parseFloat(h.X[0]),
+                        Y: parseFloat(h.Y[0]),
+                        Z: parseFloat(h.Z[0]),
+                    }
+                })
+            }
         }
         if (result.Profile.Repair) {
             result.Profile.Repair = result.Profile.Repair.map(r => {
