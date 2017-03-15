@@ -136,7 +136,7 @@ app.post('/xml/:name/:type?', (req, res) => {
 app.post('/:noDownload?', upload.single('file'), (req, res) => {
     parseXml(req.file.buffer)
         .then(json => {
-            normalizeJson(json, name, "grinding")
+            normalizeJson(json, req.file.originalname, "grinding")
                 .then(data => {
                     if (req.params.noDownload === '1') {
                         res.json(data);
