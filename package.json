@@ -1,0 +1,20 @@
+{
+    "name": "profile-converter",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+        "start": "nodemon server.js"
+    },
+    "dependencies": {
+        "express": "^4.14.0",
+        "global": "^4.3.1",
+        "memorystream": "^0.3.1",
+        "mime-types": "^2.1.13",
+        "multer": "^1.2.0",
+        "node-zip": "^1.1.1",
+        "nodemon": "^1.11.0",
+        "request": "^2.79.0",
+        "xml2js": "^0.4.17"
+    }
+}
