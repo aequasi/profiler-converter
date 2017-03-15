@@ -133,7 +133,7 @@ app.post('/xml/:name/:type?', (req, res) => {
         .catch(err => res.status(500).send(err.stack));
 });
 
-app.post('/:noDownload', upload.single('file'), (req, res) => {
+app.post('/:noDownload?', upload.single('file'), (req, res) => {
     parseXml(req.file.buffer)
         .then(json => {
             normalizeJson(json, name, "grinding")
