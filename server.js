@@ -63,7 +63,7 @@ app.get('/', (req, res) => {
 `);
 });
 
-app.post('/', upload.single('file'), (req, res) => {
+app.post('/:noDownload', upload.single('file'), (req, res) => {
     console.log(`Converting ${req.file.originalname} to the JSON.`);
     
     parseString(req.file.buffer, (err, result) => {
@@ -103,6 +103,12 @@ app.post('/', upload.single('file'), (req, res) => {
         
         const data = JSON.stringify(json, null, 4);
         //console.log(data);
+        if (req.param('noDownload') === '1') {
+            res.send(data);
+            
+            return
+        }
+        
         res.setHeader('Content-disposition', `attachment; filename= ${req.file.originalname.replace('.xml', '.json')}`);
         res.setHeader('Content-type', 'application/json');
         res.write(data, err => {
