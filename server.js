@@ -80,27 +80,33 @@ function normalizeJson(json, name, type) {
         
         let hotspots = ['Hotspot', 'VendorHotspot', 'GhostHotspot'];
         for (let hotspot of hotspots) {
-            if (data.Profile && data.Profile[hotspot + 's'] && data.Profile[hotspot + 's'][0]) {
-                data.Profile[hotspot + 's'] = data.Profile[hotspot + 's'][0][hotspot].map(h => {
-                    return {
-                        X:    parseFloat(h.X[0]),
-                        Y:    parseFloat(h.Y[0]),
-                        Z:    parseFloat(h.Z[0]),
-                        Type: h.type,
-                    }
+            if (data.Profile && data.Profile[hotspot + 's']) {
+                if (!Array.isArray(data.Profile[hotspot + 's'][hotspot])) {
+                    data.Profile[hotspot + 's'][hotspot] = [data.Profile[hotspot + 's'][hotspot]];
+                }
+                
+                data.Profile[hotspot + 's'] = data.Profile[hotspot + 's'][hotspot].map(h => {
+                    return Object.assign(h, {
+                        X: parseFloat(h.X),
+                        Y: parseFloat(h.Y),
+                        Z: parseFloat(h.Z),
+                    })
                 })
             }
         }
         
+        
         if (data.Profile && data.Profile.Repair) {
+            if (!Array.isArray(data.Profile.Repair)) {
+                data.Profile.Repair = [data.Profile.Repair];
+            }
+
             data.Profile.Repair = data.Profile.Repair.map(r => {
                 return {
-                    Position: {
-                        X: parseFloat(r.Position[0].X[0]),
-                        Y: parseFloat(r.Position[0].Y[0]),
-                        Z: parseFloat(r.Position[0].Z[0]),
-                    },
-                    Name:     r.Name[0]
+                    X:    parseFloat(r.Position.X),
+                    Y:    parseFloat(r.Position.Y),
+                    Z:    parseFloat(r.Position.Z),
+                    Name: r.Name[0],
                 }
             })
         }
@@ -111,7 +117,7 @@ function normalizeJson(json, name, type) {
 
 function parseXml(xml) {
     return new Promise((resolve, reject) => {
-        parseString(xml, (err, json) => {
+        parseString(xml, {explicitArray: false}, (err, json) => {
             if (err) {
                 return reject(err);
             }
