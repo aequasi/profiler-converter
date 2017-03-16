@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 
 /**
  *
- * @param {{Name: string, Type: string, Profile: Object}} json
+ * @param {{Name: string, Type: string, Profile: {Hotspot: *, VendorHotspot: *, GhostHotspot: *, Factions: *, Repair: *}}} json
  * @param name
  * @param type
  * @returns {Promise}
@@ -78,37 +78,46 @@ function normalizeJson(json, name, type) {
     return new Promise(resolve => {
         let data = Object.assign({}, {Name: name, Type: type}, json);
         
-        let hotspots = ['Hotspot', 'VendorHotspot', 'GhostHotspot'];
-        for (let hotspot of hotspots) {
-            if (data.Profile && data.Profile[hotspot + 's']) {
-                if (!Array.isArray(data.Profile[hotspot + 's'][hotspot])) {
-                    data.Profile[hotspot + 's'][hotspot] = [data.Profile[hotspot + 's'][hotspot]];
+        if (data.Profile) {
+            let hotspots = ['Hotspot', 'VendorHotspot', 'GhostHotspot'];
+            for (let hotspot of hotspots) {
+                if (data.Profile[hotspot + 's']) {
+                    if (!Array.isArray(data.Profile[hotspot + 's'][hotspot])) {
+                        data.Profile[hotspot + 's'][hotspot] = [data.Profile[hotspot + 's'][hotspot]];
+                    }
+            
+                    data.Profile[hotspot + 's'] = data.Profile[hotspot + 's'][hotspot].map(h => {
+                        return Object.assign(h, {
+                            X: parseFloat(h.X),
+                            Y: parseFloat(h.Y),
+                            Z: parseFloat(h.Z),
+                        })
+                    })
+                }
+            }
+    
+            if (data.Profile.Factions) {
+                if (!Array.isArray(data.Profile.Factions.Faction)) {
+                    data.Profile.Factions.Faction = [data.Profile.Factions.Faction];
                 }
                 
-                data.Profile[hotspot + 's'] = data.Profile[hotspot + 's'][hotspot].map(h => {
-                    return Object.assign(h, {
-                        X: parseFloat(h.X),
-                        Y: parseFloat(h.Y),
-                        Z: parseFloat(h.Z),
-                    })
+                data.Profile.Factions = data.Profile.Factions.Faction.map(f => parseInt(f))
+            }
+        
+            if (data.Profile.Repair) {
+                if (!Array.isArray(data.Profile.Repair)) {
+                    data.Profile.Repair = [data.Profile.Repair];
+                }
+        
+                data.Profile.Repair = data.Profile.Repair.map(r => {
+                    return {
+                        X:    parseFloat(r.Position.X),
+                        Y:    parseFloat(r.Position.Y),
+                        Z:    parseFloat(r.Position.Z),
+                        Name: r.Name,
+                    }
                 })
             }
-        }
-        
-        
-        if (data.Profile && data.Profile.Repair) {
-            if (!Array.isArray(data.Profile.Repair)) {
-                data.Profile.Repair = [data.Profile.Repair];
-            }
-
-            data.Profile.Repair = data.Profile.Repair.map(r => {
-                return {
-                    X:    parseFloat(r.Position.X),
-                    Y:    parseFloat(r.Position.Y),
-                    Z:    parseFloat(r.Position.Z),
-                    Name: r.Name,
-                }
-            })
         }
         
         resolve(data);
