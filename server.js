@@ -106,7 +106,7 @@ function normalizeJson(json, name, type) {
                     X:    parseFloat(r.Position.X),
                     Y:    parseFloat(r.Position.Y),
                     Z:    parseFloat(r.Position.Z),
-                    Name: r.Name[0],
+                    Name: r.Name,
                 }
             })
         }
