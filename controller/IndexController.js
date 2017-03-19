@@ -51,4 +51,7 @@ module.exports = router => {
 
 `);
     });
+    router.get('/example', (req, res) => {
+        res.json(require('../example/profile.json'));
+    })
 };
