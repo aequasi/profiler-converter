@@ -1,6 +1,7 @@
-const express     = require('express'),
-      request     = require('request'),
-      app         = express();
+const express    = require('express'),
+      request    = require('request'),
+      bodyParser = require('body-parser'),
+      app        = express();
 
 require('./controller/IndexController')(app);
 require('./controller/ValidateController')(app);
