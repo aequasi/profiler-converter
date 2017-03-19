@@ -45,6 +45,19 @@ module.exports = router => {
                     </form>
                 </div>
             </div>
+            <div class="hero-foot">
+                <nav class="tabs">
+                    <div class="container">
+                        <ul>
+                            <li class="is-active">Endpoints:</li>
+                            <li><a>POST /:noDownload?</a></li>
+                            <li><a>POST /xml/:name/:type? - Raw text/xml</a></li>
+                            <li><a>POST /validate - Raw application/json</a></li>
+                            <li><a>GET /example</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
         </section>
     </body>
 </html>
